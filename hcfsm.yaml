@@ -1,0 +1,126 @@
+statechart:
+  name: Elevator
+  preamble: |
+    at_zero = False
+    at_one = False
+    current = 0
+    req1 = False
+    req2 = False
+    up = False
+    down = False
+    ascend = False 
+    descend = False
+  root state:
+    name: active
+    parallel states:
+      - name: OutsideElevator   
+        initial: S  
+        states:
+          - name: S                                    
+            transitions:
+              - target: R1  
+                guard: req1 == True 
+                event: req1   
+                action: |
+                    up = True 
+                    current = 1
+              - target: R0
+                guard: req0 == True 
+                event: req0 
+                action: |
+                    down = True
+                    current = 0
+          - name: R0
+            transitions:
+              - target: R01
+                guard: req1 == True 
+                event: req1 
+              - target: R0
+                guard: req0 == True
+                event: req0  
+              - target: S
+                guard: current == 0
+                event: at_zero 
+          - name: R1 
+            transitions:
+              - target: R10
+                guard: req0 == True
+                event: req0 
+              - target: R1
+                guard: req1 == True
+                event: req1
+              - target: S
+                guard: current == 1
+                event: at_one 
+          - name: R10
+            transitions:
+              - target: R0
+                guard: current == 1
+                event: at_one
+              - target: R10
+                guard: req0 == True   
+                event: req0 
+          - name: R01
+            transitions:
+              - target: R01
+                guard: req1 == True
+                event: req1
+              - target: R1
+                guard: current == 0
+                event: at_zero
+      - name: InsideElevator
+        initial: F0  
+        states:
+          - name: F0
+            transitions:
+              - target: arrow_up
+                guard: up == True
+                event: up
+                action: |
+                    current = 1
+                    ascend = True
+              - target: F0
+                guard: |
+                   up == False
+                   down == False
+                action: |
+                    current = 0
+                    at_zero = True
+          - name: arrow_up
+            transitions:
+              - target: F1
+                guard: current == 1 
+                event: done
+                action: |
+                    at_one = True
+              - target: arrow_down
+                guard: down == True
+                event: down
+                action: |
+                    current = 0
+                    descend == True
+          - name: arrow_down
+            transitions:
+              - target: arrow_up
+                guard: up == true 
+                event: up
+                action: |
+                    ascend = True
+                    current = 1
+              - target: F0
+                guard : current == 0
+                event: done
+                action: at_zero = true
+          - name: F1
+            transitions:
+              - target: arrow_down
+                guard:  |
+                    down == true 
+                    current == 1
+                event: down
+                action: |
+                    descend = true 
+                    current = 0
+              - target: F1
+                guard: current == 1
+                action: current = at_one
